@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico de Barras - Pesquisa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .page {
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20mm;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .chart-container {
+            height: 60%;
+            width: 100%;
+            position: relative;
+        }
+
+        .bar {
+            transition: all 0.5s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 10;
+            max-width: 300px;
+            white-space: normal;
+            word-wrap: break-word;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .page {
+                box-shadow: none;
+                margin: 0;
+                padding: 10mm;
+            }
+
+            button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Resultados da Pesquisa</h1>
+            <p class="text-gray-600 mt-2">Porcentagem de respostas "SIM" para cada pergunta</p>
+        </div>
+
+        <div class="chart-container" id="chart"></div>
+
+        <!-- Legenda de cores -->
+        <div class="mt-4 text-sm">
+            <h2 class="text-lg font-semibold mb-2">Legenda das cores:</h2>
+            <div id="legend" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <div class="mt-6">
+            <h2 class="text-lg font-semibold mb-2">Perguntas:</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                <div class="p-2 bg-gray-50 rounded">1. Você fez o L</div>
+                <div class="p-2 bg-gray-50 rounded">2. Você apoia o Elon Musk</div>
+                <div class="p-2 bg-gray-50 rounded">3. Você gosta do atual governo do Brasil</div>
+                <div class="p-2 bg-gray-50 rounded">4. Você jogaria uma bomba nuclear em Brasília</div>
+                <div class="p-2 bg-gray-50 rounded">5. Você se candidataria a presidente do Brasil</div>
+                <div class="p-2 bg-gray-50 rounded">6. Você acha que o atual método de ensino no ensino médio está bom</div>
+                <div class="p-2 bg-gray-50 rounded">7. Você acha que os robôs vão substituir os professores</div>
+                <div class="p-2 bg-gray-50 rounded">8. Você gostaria que o JOF se tornasse um colégio militar</div>
+                <div class="p-2 bg-gray-50 rounded">9. Você acha justo o salário dos professores</div>
+                <div class="p-2 bg-gray-50 rounded">10. Você acha fácil entender o que os professores ensinam para os alunos</div>
+                <div class="p-2 bg-gray-50 rounded">11. Você não sabe o que fazer depois da escola</div>
+                <div class="p-2 bg-gray-50 rounded">12. Se caso o que você se formou não está dando certo na sua vida, você já está pensando em um plano B</div>
+                <div class="p-2 bg-gray-50 rounded">13. Você apoia a IA mesmo sabendo que ela pode substituir o trabalho de artistas que dedicaram sua vida a isso</div>
+                <div class="p-2 bg-gray-50 rounded">14. A IA pode te ajudar no que você pretende ser na vida</div>
+                <div class="p-2 bg-gray-50 rounded">15. Você pretende ser alguém famoso com sua profissão</div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-4 right-4 text-xs text-gray-400">
+            Formato A4 (210mm x 297mm)
+        </div>
+    </div>
+
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const data = [
+                { question: 1, percentage: 34, people: 5, text: "Você fez o L" },
+                { question: 2, percentage: 54, people: 8, text: "Você apoia o Elon Musk" },
+                { question: 3, percentage: 14, people: 2, text: "Você gosta do atual governo do Brasil" },
+                { question: 4, percentage: 0, people: 0, text: "Você jogaria uma bomba nuclear em Brasília" },
+                { question: 5, percentage: 20, people: 3, text: "Você se candidataria a presidente do Brasil" },
+                { question: 6, percentage: 7, people: 1, text: "Você acha que o atual método de ensino no ensino médio está bom" },
+                { question: 7, percentage: 0, people: 0, text: "Você acha que os robôs vão substituir os professores" },
+                { question: 8, percentage: 0, people: 0, text: "Você gostaria que o JOF se tornasse um colégio militar" },
+                { question: 9, percentage: 27, people: 4, text: "Você acha justo o salário dos professores" },
+                { question: 10, percentage: 47, people: 7, text: "Você acha fácil entender o que os professores ensinam para os alunos" },
+                { question: 11, percentage: 14, people: 2, text: "Você não sabe o que fazer depois da escola" },
+                { question: 12, percentage: 27, people: 4, text: "Se caso o que você se formou não está dando certo na sua vida, você já está pensando em um plano B" },
+                { question: 13, percentage: 34, people: 5, text: "Você apoia a IA mesmo sabendo que ela pode substituir o trabalho de artistas que dedicaram sua vida a isso" },
+                { question: 14, percentage: 87, people: 13, text: "A IA pode te ajudar no que você pretende ser na vida" },
+                { question: 15, percentage: 40, people: 6, text: "Você pretende ser alguém famoso com sua profissão" }
+            ];
+
+            const colors = [
+                '#3498db', '#2ecc71', '#9b59b6', '#e74c3c', '#f39c12',
+                '#1abc9c', '#d35400', '#34495e', '#16a085', '#c0392b',
+                '#2980b9', '#8e44ad', '#f1c40f', '#27ae60', '#e67e22'
+            ];
+
+            const chartContainer = document.getElementById('chart');
+            const tooltip = document.getElementById('tooltip');
+            const legendContainer = document.getElementById('legend');
+
+            // Criar legenda
+            data.forEach((item, index) => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'flex items-center gap-1';
+                legendItem.innerHTML = `
+                    <div style="width: 14px; height: 14px; background-color: ${colors[index % colors.length]}; border-radius: 3px;"></div>
+                    <span>${item.question}</span>
+                `;
+                legendContainer.appendChild(legendItem);
+            });
+
+            const chartHeight = chartContainer.offsetHeight - 50; 
+            const barWidth = (chartContainer.offsetWidth - 60) / data.length - 10;
+            
+            let chartHTML = '<div class="relative h-full">';
+
+            // Linhas de referência
+            for (let i = 0; i <= 10; i++) {
+                const yPos = chartHeight - (i * chartHeight / 10);
+                chartHTML += `
+                    <div class="absolute w-full border-t border-gray-200" style="top: ${yPos}px; left: 40px;">
+                        <span class="absolute -left-10 -translate-y-1/2 text-xs text-gray-500">${i * 10}%</span>
+                    </div>
+                `;
+            }
+
+            // Barras e valores
+            data.forEach((item, index) => {
+                const barHeight = (item.percentage / 100) * chartHeight;
+                const xPos = 50 + index * (barWidth + 10);
+
+                chartHTML += `
+                    <div class="absolute text-xs font-semibold text-gray-800 text-center" 
+                         style="left: ${xPos}px; bottom: ${barHeight + 35}px; width: ${barWidth}px;">
+                        ${item.percentage}%
+                    </div>
+                    <div class="bar absolute rounded-t-md"
+                         style="left: ${xPos}px; bottom: 30px; width: ${barWidth}px; height: ${barHeight}px; background-color: ${colors[index % colors.length]};"
+                         data-question="${item.question}"
+                         data-percentage="${item.percentage}"
+                         data-people="${item.people}"
+                         data-text="${item.text}">
+                    </div>
+                    <div class="absolute text-xs text-gray-600 text-center" style="left: ${xPos}px; bottom: 10px; width: ${barWidth}px;">
+                        ${item.question}
+                    </div>
+                `;
+            });
+
+            chartHTML += '</div>';
+            chartContainer.innerHTML = chartHTML;
+
+            const bars = document.querySelectorAll('.bar');
+            bars.forEach(bar => {
+                bar.addEventListener('mousemove', function(e) {
+                    const question = this.getAttribute('data-question');
+                    const percentage = this.getAttribute('data-percentage');
+                    const people = this.getAttribute('data-people');
+                    const text = this.getAttribute('data-text');
+                    
+                    tooltip.innerHTML = `
+                        <strong>Pergunta ${question}:</strong> ${text}<br>
+                        <strong>Respostas "SIM":</strong> ${people} pessoas (${percentage}%)
+                    `;
+                    
+                    tooltip.style.opacity = '1';
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY - 40}px`;
+                });
+                
+                bar.addEventListener('mouseleave', function() {
+                    tooltip.style.opacity = '0';
+                });
+            });
+
+            const printButton = document.createElement('button');
+            printButton.className = 'fixed top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition';
+            printButton.textContent = 'Imprimir';
+            printButton.addEventListener('click', () => window.print());
+            document.body.appendChild(printButton);
+        });
+    </script>
+</body>
+</html>
